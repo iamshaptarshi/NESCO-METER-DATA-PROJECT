@@ -3,155 +3,193 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NESCO Smart Portal</title>
+    <title>NESCO Dashboard v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: "class" };
+    </script>
     <style>
-      body {
-        background: #f5f7fb;
+      .tab-content {
+        display: none;
       }
-      .tab-btn.active {
-        background: #2563eb;
-        color: white;
+      .tab-content.active {
+        display: block;
       }
-      .fade {
-        animation: fade 0.25s ease;
+      .skeleton {
+        animation: pulse 1.2s infinite;
       }
-      @keyframes fade {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
+      @keyframes pulse {
+        50% {
+          opacity: 0.55;
         }
-        to {
-          opacity: 1;
-          transform: none;
-        }
-      }
-      .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
       }
     </style>
   </head>
-  <body>
-    <nav class="bg-white border-b sticky top-0 z-50">
-      <div
-        class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center gap-4 justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800">
-            ⚡ NESCO Smart Dashboard
-          </h1>
-          <p class="text-sm text-slate-500">Meter Information Portal</p>
-        </div>
+  <body class="bg-slate-100 dark:bg-slate-900 transition-colors">
+    <nav class="bg-white dark:bg-slate-800 border-b sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <div
+          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div>
+            <h1
+              class="text-lg md:text-2xl font-bold text-slate-800 dark:text-white">
+              NESCO Smart Dashboard
+            </h1>
+            <p class="text-xs md:text-sm text-slate-500">
+              Professional Meter Information Portal
+            </p>
+          </div>
 
-        <div class="flex gap-2 flex-wrap">
-          <button
-            class="tab-btn active px-4 py-2 rounded-xl bg-slate-100"
-            onclick="showTab('overview', this)">
-            Overview
-          </button>
-          <button
-            class="tab-btn px-4 py-2 rounded-xl bg-slate-100"
-            onclick="showTab('profile', this)">
-            Profile
-          </button>
-          <button
-            class="tab-btn px-4 py-2 rounded-xl bg-slate-100"
-            onclick="showTab('history', this)">
-            Recharge History
-          </button>
-          <button
-            class="tab-btn px-4 py-2 rounded-xl bg-slate-100"
-            onclick="showTab('downloads', this)">
-            Downloads
-          </button>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <button
+              class="tab-btn active-tab px-3 md:px-4 py-2 rounded-xl bg-blue-600 text-white text-xs md:text-sm"
+              onclick="showTab('overview', this)">
+              Overview
+            </button>
+            <button
+              class="tab-btn px-3 md:px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 dark:text-white text-xs md:text-sm"
+              onclick="showTab('profile', this)">
+              Profile
+            </button>
+            <button
+              class="tab-btn px-3 md:px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 dark:text-white text-xs md:text-sm"
+              onclick="showTab('history', this)">
+              History
+            </button>
+            <button
+              class="tab-btn px-3 md:px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 dark:text-white text-xs md:text-sm"
+              onclick="showTab('downloads', this)">
+              Downloads
+            </button>
+
+            <button
+              id="themeBtn"
+              class="p-2 rounded-xl bg-slate-200 dark:bg-slate-700 dark:text-white text-xs md:text-sm">
+              Theme
+            </button>
+          </div>
         </div>
       </div>
     </nav>
 
     <div class="max-w-7xl mx-auto p-4 md:p-8">
-      <div class="bg-white rounded-3xl shadow-sm p-5 md:p-8 mb-6">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow p-5 mb-6">
         <div class="flex flex-col md:flex-row gap-3">
           <input
             id="meterInput"
-            class="flex-1 border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Customer Number" />
+            placeholder="Enter Customer Number"
+            class="flex-1 border rounded-2xl px-4 py-4 dark:bg-slate-700 dark:text-white" />
           <button
+            id="searchBtn"
             onclick="searchMeter()"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold">
+            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl">
             Search Meter
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="card bg-white rounded-3xl p-5 transition-all">
-          <p class="text-slate-500 text-sm">Balance</p>
-          <h2 id="balanceCard" class="text-3xl font-bold text-blue-600">--</h2>
-        </div>
-        <div class="card bg-white rounded-3xl p-5 transition-all">
-          <p class="text-slate-500 text-sm">Meter No</p>
-          <h2 id="meterCard" class="text-lg font-bold">--</h2>
-        </div>
-        <div class="card bg-white rounded-3xl p-5 transition-all">
-          <p class="text-slate-500 text-sm">Tariff</p>
-          <h2 id="tariffCard" class="text-lg font-bold">--</h2>
-        </div>
-        <div class="card bg-white rounded-3xl p-5 transition-all">
-          <p class="text-slate-500 text-sm">Status</p>
-          <h2 id="statusCard" class="text-lg font-bold">--</h2>
-        </div>
-      </div>
-
-      <div id="overview" class="tab-content fade">
-        <div class="bg-white rounded-3xl p-6 shadow-sm">
-          <h2 class="text-2xl font-bold mb-5">Overview</h2>
-          <div id="overviewContent" class="grid md:grid-cols-3 gap-4"></div>
-        </div>
-      </div>
-
-      <div id="profile" class="tab-content hidden fade">
-        <div class="bg-white rounded-3xl p-6 shadow-sm">
-          <h2 class="text-2xl font-bold mb-5">Customer Profile</h2>
+      <div id="loader" class="hidden">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div
-            id="profileGrid"
-            class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+            class="h-28 bg-white dark:bg-slate-800 rounded-3xl skeleton"></div>
+          <div
+            class="h-28 bg-white dark:bg-slate-800 rounded-3xl skeleton"></div>
+          <div
+            class="h-28 bg-white dark:bg-slate-800 rounded-3xl skeleton"></div>
+          <div
+            class="h-28 bg-white dark:bg-slate-800 rounded-3xl skeleton"></div>
         </div>
       </div>
 
-      <div id="history" class="tab-content hidden fade">
-        <div class="bg-white rounded-3xl p-6 shadow-sm overflow-auto">
-          <h2 class="text-2xl font-bold mb-5">Recharge History</h2>
-          <table class="w-full">
-            <thead>
-              <tr class="bg-slate-100">
-                <th class="p-3 text-left">Token</th>
-                <th class="p-3 text-left">Amount</th>
-                <th class="p-3 text-left">Unit</th>
-                <th class="p-3 text-left">Method</th>
-                <th class="p-3 text-left">Date</th>
-              </tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-          </table>
+      <div id="statsSection" class="hidden mb-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            class="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-3xl p-5">
+            <p class="text-sm">Balance</p>
+            <h2 id="balanceCard" class="text-2xl font-bold"></h2>
+          </div>
+          <div
+            class="bg-gradient-to-r from-green-600 to-green-500 text-white rounded-3xl p-5">
+            <p class="text-sm">Meter No</p>
+            <h2 id="meterCard" class="font-bold"></h2>
+          </div>
+          <div
+            class="bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-3xl p-5">
+            <p class="text-sm">Tariff</p>
+            <h2 id="tariffCard" class="font-bold"></h2>
+          </div>
+          <div
+            class="bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-3xl p-5">
+            <p class="text-sm">Status</p>
+            <h2 id="statusCard" class="font-bold"></h2>
+          </div>
         </div>
       </div>
 
-      <div id="downloads" class="tab-content hidden fade">
-        <div class="bg-white rounded-3xl p-6 shadow-sm">
-          <h2 class="text-2xl font-bold mb-5">Downloads</h2>
-          <div class="flex flex-col md:flex-row gap-4">
-            <a
-              id="pdfHistory"
-              target="_blank"
-              class="bg-green-600 text-white px-6 py-4 rounded-2xl text-center"
-              >Recharge History PDF</a
-            >
-            <a
-              id="pdfCert"
-              target="_blank"
-              class="bg-purple-600 text-white px-6 py-4 rounded-2xl text-center"
-              >Certificate PDF</a
-            >
+      <div id="dashboard" class="hidden">
+        <div id="overview" class="tab-content active">
+          <div class="bg-white dark:bg-slate-800 rounded-3xl shadow p-6">
+            <h2 class="text-xl font-bold mb-4 dark:text-white">Overview</h2>
+            <div id="overviewContent" class="grid md:grid-cols-3 gap-4"></div>
+          </div>
+        </div>
+
+        <div id="profile" class="tab-content">
+          <div class="bg-white dark:bg-slate-800 rounded-3xl shadow p-6">
+            <h2 class="text-xl font-bold mb-4 dark:text-white">
+              Customer Profile
+            </h2>
+            <div
+              id="profileGrid"
+              class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          </div>
+        </div>
+
+        <div id="history" class="tab-content">
+          <div class="bg-white dark:bg-slate-800 rounded-3xl shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-bold dark:text-white">
+                Recharge History
+              </h2>
+              <span id="historyCount" class="text-sm text-slate-500"
+                >0 Records</span
+              >
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="bg-slate-100 dark:bg-slate-700 dark:text-white">
+                    <th class="text-left p-3">Token</th>
+                    <th class="text-left p-3">Amount</th>
+                    <th class="text-left p-3">Unit</th>
+                    <th class="text-left p-3">Method</th>
+                    <th class="text-left p-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="downloads" class="tab-content">
+          <div class="bg-white dark:bg-slate-800 rounded-3xl shadow p-6">
+            <h2 class="text-xl font-bold mb-4 dark:text-white">Downloads</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+              <a
+                id="pdfHistory"
+                target="_blank"
+                class="bg-green-600 text-white px-6 py-4 rounded-xl text-center"
+                >Recharge History PDF</a
+              >
+              <a
+                id="pdfCert"
+                target="_blank"
+                class="bg-purple-600 text-white px-6 py-4 rounded-xl text-center"
+                >Certificate PDF</a
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -161,58 +199,95 @@
       function showTab(id, btn) {
         document
           .querySelectorAll(".tab-content")
-          .forEach((x) => x.classList.add("hidden"));
-        document.getElementById(id).classList.remove("hidden");
-
-        document
-          .querySelectorAll(".tab-btn")
           .forEach((x) => x.classList.remove("active"));
-        if (btn) btn.classList.add("active");
-      }
+        document.getElementById(id).classList.add("active");
 
-      async function searchMeter() {
-        const custNo = document.getElementById("meterInput").value.trim();
-        if (!custNo) return;
-
-        const res = await fetch(`https://nesco-meter-data-project.onrender.com/api/meter/${custNo}`);
-        const data = await res.json();
-
-        const c = data.customer || {};
-
-        balanceCard.textContent = c.balance || "N/A";
-        meterCard.textContent = c.meterNo || "N/A";
-        tariffCard.textContent = c.tariff || "N/A";
-        statusCard.textContent = c.meterStatus || "N/A";
-
-        overviewContent.innerHTML = `
-<div class="bg-blue-50 rounded-2xl p-5"><h3 class="font-semibold">Customer</h3><p>${c.name || ""}</p></div>
-<div class="bg-green-50 rounded-2xl p-5"><h3 class="font-semibold">Consumer No</h3><p>${c.consumerNo || ""}</p></div>
-<div class="bg-purple-50 rounded-2xl p-5"><h3 class="font-semibold">Office</h3><p>${c.office || ""}</p></div>`;
-
-        profileGrid.innerHTML = "";
-        Object.entries(c).forEach(([k, v]) => {
-          profileGrid.innerHTML += `
-<div class="border rounded-2xl p-4">
-<div class="text-slate-500 text-sm">${k}</div>
-<div class="font-semibold break-words">${v || ""}</div>
-</div>`;
+        document.querySelectorAll(".tab-btn").forEach((x) => {
+          x.classList.remove("bg-blue-600", "text-white");
+          x.classList.add(
+            "bg-slate-200",
+            "dark:bg-slate-700",
+            "dark:text-white",
+          );
         });
 
-        historyBody.innerHTML = "";
-        (data.rechargeHistory || []).forEach((r) => {
-          historyBody.innerHTML += `
-<tr class="border-b">
+        btn.classList.remove(
+          "bg-slate-200",
+          "dark:bg-slate-700",
+          "dark:text-white",
+        );
+        btn.classList.add("bg-blue-600", "text-white");
+
+        if (id === "overview") statsSection.classList.remove("hidden");
+        else statsSection.classList.add("hidden");
+      }
+
+      const root = document.documentElement;
+      if (localStorage.theme === "dark") root.classList.add("dark");
+      themeBtn.onclick = () => {
+        root.classList.toggle("dark");
+        localStorage.theme = root.classList.contains("dark") ? "dark" : "light";
+      };
+
+      async function searchMeter() {
+        const custNo = meterInput.value.trim();
+        if (!custNo) return;
+
+        loader.classList.remove("hidden");
+        dashboard.classList.add("hidden");
+
+        try {
+          const res = await fetch(
+            `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}`,
+          );
+          const data = await res.json();
+          const c = data.customer || {};
+
+          dashboard.classList.remove("hidden");
+          statsSection.classList.remove("hidden");
+
+          balanceCard.textContent = c.balance || "N/A";
+          meterCard.textContent = c.meterNo || "N/A";
+          tariffCard.textContent = c.tariff || "N/A";
+          statusCard.textContent = c.meterStatus || "N/A";
+
+          overviewContent.innerHTML = `
+<div class="bg-blue-50 dark:bg-slate-700 p-5 rounded-2xl dark:text-white"><div class="text-sm opacity-70">Customer</div><div class="font-bold">${c.name || ""}</div></div>
+<div class="bg-green-50 dark:bg-slate-700 p-5 rounded-2xl dark:text-white"><div class="text-sm opacity-70">Consumer No</div><div class="font-bold">${c.consumerNo || ""}</div></div>
+<div class="bg-purple-50 dark:bg-slate-700 p-5 rounded-2xl dark:text-white"><div class="text-sm opacity-70">Office</div><div class="font-bold">${c.office || ""}</div></div>`;
+
+          profileGrid.innerHTML = "";
+          Object.entries(c).forEach(([k, v]) => {
+            profileGrid.innerHTML += `<div class="border rounded-2xl p-4 dark:text-white"><div class="text-sm opacity-60">${k}</div><div class="font-semibold">${v || ""}</div></div>`;
+          });
+
+          historyBody.innerHTML = "";
+          const rows = data.rechargeHistory || [];
+          historyCount.textContent = `${rows.length} Records`;
+
+          rows.forEach((r) => {
+            historyBody.innerHTML += `
+<tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700">
 <td class="p-3">${r.tokenNo || ""}</td>
-<td class="p-3">${r.rechargeAmount || ""}</td>
+<td class="p-3 font-semibold text-green-600">${r.rechargeAmount || ""}</td>
 <td class="p-3">${r.energyUnit || ""}</td>
 <td class="p-3">${r.method || ""}</td>
 <td class="p-3">${r.rechargeDate || ""}</td>
 </tr>`;
-        });
+          });
 
-        pdfHistory.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/recharge-history/pdf`;
-        pdfCert.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/certificate/pdf`;
+          pdfHistory.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/recharge-history/pdf`;
+          pdfCert.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/certificate/pdf`;
+        } catch (e) {
+          alert(e.message);
+        } finally {
+          loader.classList.add("hidden");
+        }
       }
+
+      meterInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") searchMeter();
+      });
     </script>
   </body>
 </html>
