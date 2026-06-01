@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NESCO Smart Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#f5f7fb}
+.tab-btn.active{background:#2563eb;color:white}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:0 15px 35px rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+
+<nav class="bg-white border-b sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+<div>
+<h1 class="text-2xl font-bold text-slate-800">⚡ NESCO Smart Dashboard</h1>
+<p class="text-sm text-slate-500">Meter Information Portal</p>
+</div>
+
+<div class="flex gap-2 flex-wrap">
+<button class="tab-btn active px-4 py-2 rounded-xl bg-slate-100" onclick="showTab('overview',this)">Overview</button>
+<button class="tab-btn px-4 py-2 rounded-xl bg-slate-100" onclick="showTab('profile',this)">Profile</button>
+<button class="tab-btn px-4 py-2 rounded-xl bg-slate-100" onclick="showTab('history',this)">Recharge History</button>
+<button class="tab-btn px-4 py-2 rounded-xl bg-slate-100" onclick="showTab('downloads',this)">Downloads</button>
+</div>
+</div>
+</nav>
+
+<div class="max-w-7xl mx-auto p-4 md:p-8">
+
+<div class="bg-white rounded-3xl shadow-sm p-5 md:p-8 mb-6">
+<div class="flex flex-col md:flex-row gap-3">
+<input id="meterInput" class="flex-1 border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Customer Number">
+<button onclick="searchMeter()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold">Search Meter</button>
+</div>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="card bg-white rounded-3xl p-5 transition-all">
+<p class="text-slate-500 text-sm">Balance</p>
+<h2 id="balanceCard" class="text-3xl font-bold text-blue-600">--</h2>
+</div>
+<div class="card bg-white rounded-3xl p-5 transition-all">
+<p class="text-slate-500 text-sm">Meter No</p>
+<h2 id="meterCard" class="text-lg font-bold">--</h2>
+</div>
+<div class="card bg-white rounded-3xl p-5 transition-all">
+<p class="text-slate-500 text-sm">Tariff</p>
+<h2 id="tariffCard" class="text-lg font-bold">--</h2>
+</div>
+<div class="card bg-white rounded-3xl p-5 transition-all">
+<p class="text-slate-500 text-sm">Status</p>
+<h2 id="statusCard" class="text-lg font-bold">--</h2>
+</div>
+</div>
+
+<div id="overview" class="tab-content fade">
+<div class="bg-white rounded-3xl p-6 shadow-sm">
+<h2 class="text-2xl font-bold mb-5">Overview</h2>
+<div id="overviewContent" class="grid md:grid-cols-3 gap-4"></div>
+</div>
+</div>
+
+<div id="profile" class="tab-content hidden fade">
+<div class="bg-white rounded-3xl p-6 shadow-sm">
+<h2 class="text-2xl font-bold mb-5">Customer Profile</h2>
+<div id="profileGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+</div>
+</div>
+
+<div id="history" class="tab-content hidden fade">
+<div class="bg-white rounded-3xl p-6 shadow-sm overflow-auto">
+<h2 class="text-2xl font-bold mb-5">Recharge History</h2>
+<table class="w-full">
+<thead>
+<tr class="bg-slate-100">
+<th class="p-3 text-left">Token</th>
+<th class="p-3 text-left">Amount</th>
+<th class="p-3 text-left">Unit</th>
+<th class="p-3 text-left">Method</th>
+<th class="p-3 text-left">Date</th>
+</tr>
+</thead>
+<tbody id="historyBody"></tbody>
+</table>
+</div>
+</div>
+
+<div id="downloads" class="tab-content hidden fade">
+<div class="bg-white rounded-3xl p-6 shadow-sm">
+<h2 class="text-2xl font-bold mb-5">Downloads</h2>
+<div class="flex flex-col md:flex-row gap-4">
+<a id="pdfHistory" target="_blank" class="bg-green-600 text-white px-6 py-4 rounded-2xl text-center">Recharge History PDF</a>
+<a id="pdfCert" target="_blank" class="bg-purple-600 text-white px-6 py-4 rounded-2xl text-center">Certificate PDF</a>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>
+function showTab(id,btn){
+document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+
+document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+if(btn) btn.classList.add('active');
+}
+
+async function searchMeter(){
+const custNo=document.getElementById('meterInput').value.trim();
+if(!custNo) return;
+
+const res=await fetch(`http://localhost:5000/api/meter/${custNo}`);
+const data=await res.json();
+
+const c=data.customer||{};
+
+balanceCard.textContent=c.balance||"N/A";
+meterCard.textContent=c.meterNo||"N/A";
+tariffCard.textContent=c.tariff||"N/A";
+statusCard.textContent=c.meterStatus||"N/A";
+
+overviewContent.innerHTML=`
+<div class="bg-blue-50 rounded-2xl p-5"><h3 class="font-semibold">Customer</h3><p>${c.name||''}</p></div>
+<div class="bg-green-50 rounded-2xl p-5"><h3 class="font-semibold">Consumer No</h3><p>${c.consumerNo||''}</p></div>
+<div class="bg-purple-50 rounded-2xl p-5"><h3 class="font-semibold">Office</h3><p>${c.office||''}</p></div>`;
+
+profileGrid.innerHTML='';
+Object.entries(c).forEach(([k,v])=>{
+profileGrid.innerHTML+=`
+<div class="border rounded-2xl p-4">
+<div class="text-slate-500 text-sm">${k}</div>
+<div class="font-semibold break-words">${v||''}</div>
+</div>`;
+});
+
+historyBody.innerHTML='';
+(data.rechargeHistory||[]).forEach(r=>{
+historyBody.innerHTML+=`
+<tr class="border-b">
+<td class="p-3">${r.tokenNo||''}</td>
+<td class="p-3">${r.rechargeAmount||''}</td>
+<td class="p-3">${r.energyUnit||''}</td>
+<td class="p-3">${r.method||''}</td>
+<td class="p-3">${r.rechargeDate||''}</td>
+</tr>`;
+});
+
+pdfHistory.href=`http://localhost:5000/api/meter/${custNo}/recharge-history/pdf`;
+pdfCert.href=`http://localhost:5000/api/meter/${custNo}/certificate/pdf`;
+}
+</script>
+
+</body>
+</html>
