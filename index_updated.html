@@ -83,6 +83,18 @@
         </div>
       </div>
 
+      <div id="loader" class="hidden text-center py-8">
+        <div
+          class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+        <p class="mt-4 text-slate-600 font-medium">
+          Fetching meter information...
+        </p>
+      </div>
+
+      <div
+        id="errorBox"
+        class="hidden bg-red-50 border border-red-300 text-red-700 p-4 rounded-2xl mb-6"></div>
+
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="card bg-white rounded-3xl p-5 transition-all">
           <p class="text-slate-500 text-sm">Balance</p>
@@ -170,37 +182,64 @@
         if (btn) btn.classList.add("active");
       }
 
+      function showError(message) {
+        const errorBox = document.getElementById("errorBox");
+        errorBox.textContent = message;
+        errorBox.classList.remove("hidden");
+      }
+
       async function searchMeter() {
         const custNo = document.getElementById("meterInput").value.trim();
-        if (!custNo) return;
 
-        const res = await fetch(`https://nesco-meter-data-project.onrender.com/api/meter/${custNo}`);
-        const data = await res.json();
+        if (!custNo) {
+          showError("Please enter a customer number.");
+          return;
+        }
 
-        const c = data.customer || {};
+        const loader = document.getElementById("loader");
+        const errorBox = document.getElementById("errorBox");
+        const btn = document.querySelector('button[onclick="searchMeter()"]');
 
-        balanceCard.textContent = c.balance || "N/A";
-        meterCard.textContent = c.meterNo || "N/A";
-        tariffCard.textContent = c.tariff || "N/A";
-        statusCard.textContent = c.meterStatus || "N/A";
+        loader.classList.remove("hidden");
+        errorBox.classList.add("hidden");
+        btn.disabled = true;
+        btn.textContent = "Loading...";
 
-        overviewContent.innerHTML = `
+        try {
+          const res = await fetch(
+            `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}`,
+          );
+
+          if (!res.ok) {
+            throw new Error(`Server responded with status ${res.status}`);
+          }
+
+          const data = await res.json();
+
+          const c = data.customer || {};
+
+          balanceCard.textContent = c.balance || "N/A";
+          meterCard.textContent = c.meterNo || "N/A";
+          tariffCard.textContent = c.tariff || "N/A";
+          statusCard.textContent = c.meterStatus || "N/A";
+
+          overviewContent.innerHTML = `
 <div class="bg-blue-50 rounded-2xl p-5"><h3 class="font-semibold">Customer</h3><p>${c.name || ""}</p></div>
 <div class="bg-green-50 rounded-2xl p-5"><h3 class="font-semibold">Consumer No</h3><p>${c.consumerNo || ""}</p></div>
 <div class="bg-purple-50 rounded-2xl p-5"><h3 class="font-semibold">Office</h3><p>${c.office || ""}</p></div>`;
 
-        profileGrid.innerHTML = "";
-        Object.entries(c).forEach(([k, v]) => {
-          profileGrid.innerHTML += `
+          profileGrid.innerHTML = "";
+          Object.entries(c).forEach(([k, v]) => {
+            profileGrid.innerHTML += `
 <div class="border rounded-2xl p-4">
 <div class="text-slate-500 text-sm">${k}</div>
 <div class="font-semibold break-words">${v || ""}</div>
 </div>`;
-        });
+          });
 
-        historyBody.innerHTML = "";
-        (data.rechargeHistory || []).forEach((r) => {
-          historyBody.innerHTML += `
+          historyBody.innerHTML = "";
+          (data.rechargeHistory || []).forEach((r) => {
+            historyBody.innerHTML += `
 <tr class="border-b">
 <td class="p-3">${r.tokenNo || ""}</td>
 <td class="p-3">${r.rechargeAmount || ""}</td>
@@ -208,11 +247,24 @@
 <td class="p-3">${r.method || ""}</td>
 <td class="p-3">${r.rechargeDate || ""}</td>
 </tr>`;
-        });
+          });
 
-        pdfHistory.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/recharge-history/pdf`;
-        pdfCert.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/certificate/pdf`;
+          pdfHistory.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/recharge-history/pdf`;
+          pdfCert.href = `https://nesco-meter-data-project.onrender.com/api/meter/${custNo}/certificate/pdf`;
+        } catch (error) {
+          showError(error.message || "Failed to fetch meter information.");
+        } finally {
+          loader.classList.add("hidden");
+          btn.disabled = false;
+          btn.textContent = "Search Meter";
+        }
       }
+
+      document
+        .getElementById("meterInput")
+        .addEventListener("keydown", function (e) {
+          if (e.key === "Enter") searchMeter();
+        });
     </script>
   </body>
 </html>
